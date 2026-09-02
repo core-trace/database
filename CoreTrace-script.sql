@@ -96,7 +96,7 @@ INSERT INTO papeis (nome, tipo) VALUES
   ('Gestor de Infraestrutura', 'GESTOR'),
   ('Analista de Dados', 'FUNCIONARIO');
  
--- Precisa existir uma empresa antes do usuário, já que empresa agora é NOT NULL
+-- Precisa existir uma empresa antes do usuário
 INSERT INTO empresa (nome, cnpj, codigo) VALUES
   ('Empresa Exemplo', '12345678000199', 'EMP0000000000001');
  
@@ -105,3 +105,9 @@ INSERT INTO usuarios (nome, email, senha, papel, cadastrado, empresa) VALUES
  
 INSERT INTO setores (nome) VALUES
   ('Financeiro'), ('TI'), ('Marketing'), ('Logística');
+  
+    ALTER TABLE usuarios ADD COLUMN passkey VARCHAR(20);
+
+
+UPDATE usuarios SET passkey = '123456' WHERE id_usuarios = 1;
+  
