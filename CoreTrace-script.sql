@@ -88,20 +88,24 @@ CREATE TABLE parametros_componentes (
   CONSTRAINT fk_parametros FOREIGN KEY (parametros) REFERENCES parametros(id_parametro),
   CONSTRAINT fk_componente FOREIGN KEY (componente) REFERENCES componentes(id_componentes)
 );
- 
+  
+-- Adicionando novas colunas nas tabelas.
+ALTER TABLE papeis MODIFY COLUMN tipo VARCHAR(100), ADD CONSTRAINT chk_papeis CHECK (tipo IN ('GESTOR','FUNCIONARIO'));
 
--- Inserts
- 
-INSERT INTO papeis (nome, tipo) VALUES
-  ('Gestor de Infraestrutura', 'GESTOR'),
-  ('Analista de Dados', 'FUNCIONARIO');
- 
--- Precisa existir uma empresa antes do usuário, já que empresa agora é NOT NULL
-INSERT INTO empresa (nome, cnpj, codigo) VALUES
-  ('Empresa Exemplo', '12345678000199', 'EMP0000000000001');
- 
-INSERT INTO usuarios (nome, email, senha, papel, cadastrado, empresa) VALUES
-  ('Marina Gestora', 'marina@empresa.com', 'senha', 1, NULL, 1);
- 
-INSERT INTO setores (nome) VALUES
-  ('Financeiro'), ('TI'), ('Marketing'), ('Logística');
+ALTER TABLE empresa ADD COLUMN dt_criacao TIMESTAMP DEFAULT current_timestamp, ADD COLUMN dt_ultimo_contrato TIMESTAMP DEFAULT current_timestamp;
+
+ALTER TABLE setores ADD COLUMN dt_criacao TIMESTAMP DEFAULT current_timestamp, ADD COLUMN dt_fim TIMESTAMP;
+
+ALTER TABLE usuarios ADD COLUMN dt_criacao TIMESTAMP DEFAULT current_timestamp, ADD COLUMN dt_retirada TIMESTAMP, ADD COLUMN dt_ultimo_login TIMESTAMP;
+
+ALTER TABLE servidores ADD COLUMN dt_criacao TIMESTAMP DEFAULT current_timestamp, ADD COLUMN dt_fim TIMESTAMP;
+
+ALTER TABLE componentes ADD COLUMN dt_adicao TIMESTAMP DEFAULT current_timestamp, ADD COLUMN dt_retirada TIMESTAMP;
+
+ALTER TABLE parametros ADD COLUMN dt_adicao TIMESTAMP DEFAULT current_timestamp, ADD COLUMN dt_retirada TIMESTAMP;
+
+ALTER TABLE acessos_servidor ADD COLUMN dt_acesso TIMESTAMP DEFAULT current_timestamp, ADD COLUMN dt_retirada TIMESTAMP;
+
+ALTER TABLE parametros_componentes ADD COLUMN dt_adicao TIMESTAMP DEFAULT current_timestamp, ADD COLUMN dt_retirada TIMESTAMP;	
+
+ALTER TABLE usuarios ADD COLUMN atividade TINYINT DEFAULT 1;
