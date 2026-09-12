@@ -1,5 +1,5 @@
 
-CREATE DATABASE coretrace;
+
 USE coretrace;
  
 -- Regra de acesso
@@ -9,21 +9,25 @@ CREATE TABLE papeis (
   tipo ENUM('GESTOR', 'FUNCIONARIO') NOT NULL
 );
  
--- Empresas (precisa existir antes de usuarios e servidores)
+-- Empresas 
 CREATE TABLE empresa (
   id_empresa INT AUTO_INCREMENT PRIMARY KEY,
-  nome VARCHAR(45),
-  cnpj CHAR(14),
+  nome VARCHAR(45) NOT NULL,
+  cnpj CHAR(14) NOT NULL UNIQUE,
   codigo CHAR(16) NOT NULL UNIQUE
 );
  
 -- Setores da empresa (Financeiro, TI, Marketing...)
+-- Cada setor pertence a uma empresa especifica
 CREATE TABLE setores (
   id_setores INT AUTO_INCREMENT PRIMARY KEY,
-  nome VARCHAR(80) NOT NULL UNIQUE
+  nome VARCHAR(80) NOT NULL,
+  empresa INT NOT NULL,
+  CONSTRAINT fk_setores_empresa FOREIGN KEY (empresa) REFERENCES empresa(id_empresa),
+  UNIQUE (nome, empresa)
 );
  
--- Usuários do sistema (quem faz login)
+-- Usuarios do sistema (quem faz login)
 CREATE TABLE usuarios (
   id_usuarios INT AUTO_INCREMENT PRIMARY KEY,
   nome VARCHAR(120) NOT NULL,
@@ -44,7 +48,7 @@ CREATE TABLE servidores (
   setor INT NOT NULL,
   empresa INT NOT NULL,
   CONSTRAINT fk_servidores_setores FOREIGN KEY (setor) REFERENCES setores(id_setores),
-  CONSTRAINT fk_servidor_empresa FOREIGN KEY (empresa) REFERENCES empresa(id_empresa)
+  CONSTRAINT fk_servidores_empresa FOREIGN KEY (empresa) REFERENCES empresa(id_empresa)
 );
  
 -- Quem pode ver qual servidor
@@ -52,6 +56,7 @@ CREATE TABLE acessos_servidor (
   usuario INT NOT NULL,
   servidor INT NOT NULL,
   concedido_por INT NOT NULL,
+  dt_concessao DATETIME DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (usuario, servidor),
   CONSTRAINT fk_acessos_usuarios FOREIGN KEY (usuario) REFERENCES usuarios(id_usuarios),
   CONSTRAINT fk_acessos_servidores FOREIGN KEY (servidor) REFERENCES servidores(id_servidor),
@@ -78,7 +83,7 @@ CREATE TABLE componentes (
 CREATE TABLE parametros (
   id_parametro INT AUTO_INCREMENT PRIMARY KEY,
   nome_parametro VARCHAR(45),
-  valor_paramentro DOUBLE
+  valor_parametro DOUBLE
 );
  
 CREATE TABLE parametros_componentes (
@@ -109,3 +114,5 @@ ALTER TABLE acessos_servidor ADD COLUMN dt_acesso TIMESTAMP DEFAULT current_time
 ALTER TABLE parametros_componentes ADD COLUMN dt_adicao TIMESTAMP DEFAULT current_timestamp, ADD COLUMN dt_retirada TIMESTAMP;	
 
 ALTER TABLE usuarios ADD COLUMN atividade TINYINT DEFAULT 1;
+
+ALTER TABLE usuarios ADD COLUMN passkey VARCHAR(255) UNIQUE;
