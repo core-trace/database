@@ -1,6 +1,26 @@
 create database CoreTrace;
 use CoreTrace;
 
+CREATE TABLE nivel_acesso (
+    idNivelAcesso INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(45)
+);
+CREATE TABLE permissoes (
+    idPermissoes INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(45),
+    descricao VARCHAR(45)
+);
+
+CREATE TABLE nivel_acesso_permissoes (
+    fkNivelAcesso INT,
+    fkPermissoes INT,
+    PRIMARY KEY (fkNivelAcesso, fkPermissoes),
+    FOREIGN KEY (fkNivelAcesso)
+        REFERENCES nivel_acesso(idNivelAcesso),
+    FOREIGN KEY (fkPermissoes)
+        REFERENCES permissoes(idPermissoes)
+);
+
 CREATE TABLE usuario (
     idUsuario INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(100),                  
@@ -17,12 +37,6 @@ cnpj char(14),
 dt_Registro DATE
 );
 
-CREATE TABLE setores (
-idSetores int auto_increment primary key,
-nome varchar(45),
-fkEmpresa int,
-foreign key(fkEmpresa) references empresa(idEmpresa)
-);
 
 CREATE TABLE servidores (
 idServidores int auto_increment primary key,
@@ -60,13 +74,6 @@ CREATE TABLE acessoMaquina(
 	primary key(fkUsuario,fkMaquina),
 	foreign key(fkUsuario) references usuario(idUsuario),
 	foreign key(fkMaquina) references maquinas(idMaquina)
-);
-
-CREATE TABLE acessoSetores(
-	fkSetores int,
-    fkUsuario int,
-    foreign key(fkSetores) references setores(idSetores),
-    foreign key(fkUsuario) references usuario(idUsuario)
 );
 
 
