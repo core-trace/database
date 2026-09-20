@@ -27,7 +27,8 @@ CREATE TABLE usuario (
     email VARCHAR(100) UNIQUE,          
     senha VARCHAR(255),                 
     passkey CHAR(4),
-    cargo VARCHAR(45)
+    cargo VARCHAR(45),
+    cpf CHAR(11)
 );
 
 CREATE TABLE empresa(
@@ -35,6 +36,14 @@ idEmpresa int auto_increment primary key,
 razaoSocial varchar(45),
 cnpj char(14),
 dt_Registro DATE
+);
+CREATE TABLE endereco(
+idEndereço int auto_increment primary key,
+numero VARCHAR(10),
+cidade VARCHAR(45),
+estado VARCHAR(45),
+logradouro VARCHAR(100),
+foreign key(fkEmpresa) references setores(idEmpresa)
 );
 
 
