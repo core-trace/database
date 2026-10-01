@@ -36,7 +36,7 @@ CREATE TABLE usuario (
     senha VARCHAR(255),
     cpf CHAR(11),
     token_instalacao VARCHAR(45),
-    token_acesso VARCHAR(32),
+    token VARCHAR(32),
     telefone VARCHAR(45),
     fkEmpresa INT,
     fkNivelAcesso INT,
