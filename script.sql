@@ -23,7 +23,8 @@ CREATE TABLE endereco (
     estado VARCHAR(45),
     logradouro VARCHAR(100),
     fk_empresa INT NOT NULL,
-    FOREIGN KEY (fk_empresa) REFERENCES empresa(id_empresa)
+    CONSTRAINT fk_endereco_empresa
+        FOREIGN KEY (fk_empresa) REFERENCES empresa(id_empresa)
 );
 
 CREATE TABLE nivel_acesso (
@@ -41,8 +42,10 @@ CREATE TABLE permissoes (
 CREATE TABLE nivel_acesso_permissoes (
     fk_nivel_acesso INT NOT NULL,
     fk_permissao INT NOT NULL,
-    FOREIGN KEY (fk_nivel_acesso) REFERENCES nivel_acesso(id_nivel_acesso),
-    FOREIGN KEY (fk_permissao) REFERENCES permissoes(id_permissao)
+    CONSTRAINT fk_nap_nivel_acesso
+        FOREIGN KEY (fk_nivel_acesso) REFERENCES nivel_acesso(id_nivel_acesso),
+    CONSTRAINT fk_nap_permissao
+        FOREIGN KEY (fk_permissao) REFERENCES permissoes(id_permissao)
 );
 
 CREATE TABLE usuario (
@@ -56,8 +59,10 @@ CREATE TABLE usuario (
     fk_empresa INT NOT NULL,
     fk_nivel_acesso INT NOT NULL,
     status VARCHAR(45),
-    FOREIGN KEY (fk_empresa) REFERENCES empresa(id_empresa),
-    FOREIGN KEY (fk_nivel_acesso) REFERENCES nivel_acesso(id_nivel_acesso)
+    CONSTRAINT fk_usuario_empresa
+        FOREIGN KEY (fk_empresa) REFERENCES empresa(id_empresa),
+    CONSTRAINT fk_usuario_nivel_acesso
+        FOREIGN KEY (fk_nivel_acesso) REFERENCES nivel_acesso(id_nivel_acesso)
 );
 
 CREATE TABLE perfil_servidor (
@@ -68,15 +73,18 @@ CREATE TABLE perfil_servidor (
     sistema_operacional VARCHAR(10) NOT NULL DEFAULT 'linux',
     monitorar_docker BOOLEAN NOT NULL DEFAULT FALSE,
     fk_empresa INT NOT NULL,
-    FOREIGN KEY (fk_empresa) REFERENCES empresa(id_empresa)
+    CONSTRAINT fk_perfil_servidor_empresa
+        FOREIGN KEY (fk_empresa) REFERENCES empresa(id_empresa)
 );
 
 CREATE TABLE usuario_perfil_servidor (
     fk_usuario INT NOT NULL,
     fk_perfil_servidor INT NOT NULL,
     papel VARCHAR(20) NOT NULL DEFAULT 'visualizador',
-    FOREIGN KEY (fk_usuario) REFERENCES usuario(id_usuario),
-    FOREIGN KEY (fk_perfil_servidor) REFERENCES perfil_servidor(id_perfil_servidor)
+    CONSTRAINT fk_ups_usuario
+        FOREIGN KEY (fk_usuario) REFERENCES usuario(id_usuario),
+    CONSTRAINT fk_ups_perfil_servidor
+        FOREIGN KEY (fk_perfil_servidor) REFERENCES perfil_servidor(id_perfil_servidor)
 );
 
 CREATE TABLE servidores (
@@ -85,7 +93,8 @@ CREATE TABLE servidores (
     status VARCHAR(45),
     endereco_mac VARCHAR(17) UNIQUE NOT NULL,
     fk_perfil_servidor INT NOT NULL,
-    FOREIGN KEY (fk_perfil_servidor) REFERENCES perfil_servidor(id_perfil_servidor)
+    CONSTRAINT fk_servidores_perfil_servidor
+        FOREIGN KEY (fk_perfil_servidor) REFERENCES perfil_servidor(id_perfil_servidor)
 );
 
 CREATE TABLE container (
@@ -93,7 +102,8 @@ CREATE TABLE container (
     nome VARCHAR(45) NOT NULL,
     status VARCHAR(45),
     fk_servidor INT NOT NULL,
-    FOREIGN KEY (fk_servidor) REFERENCES servidores(id_servidor)
+    CONSTRAINT fk_container_servidor
+        FOREIGN KEY (fk_servidor) REFERENCES servidores(id_servidor)
 );
 
 CREATE TABLE componentes (
@@ -120,8 +130,10 @@ CREATE TABLE componentes_perfil (
     limite_atencao DOUBLE,
     limite_critico DOUBLE,
     operador VARCHAR(2) NOT NULL DEFAULT '>',
-    FOREIGN KEY (fk_componente) REFERENCES componentes(id_componente),
-    FOREIGN KEY (fk_perfil_servidor) REFERENCES perfil_servidor(id_perfil_servidor)
+    CONSTRAINT fk_cp_componente
+        FOREIGN KEY (fk_componente) REFERENCES componentes(id_componente),
+    CONSTRAINT fk_cp_perfil_servidor
+        FOREIGN KEY (fk_perfil_servidor) REFERENCES perfil_servidor(id_perfil_servidor)
 );
 
 -- DADOS PARA TESTES
