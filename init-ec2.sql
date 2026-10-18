@@ -98,15 +98,6 @@ CREATE TABLE servidores (
         FOREIGN KEY (fk_perfil_servidor) REFERENCES perfil_servidor(id_perfil_servidor)
 );
 
-CREATE TABLE container (
-    id_container INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(45) NOT NULL,
-    status VARCHAR(45),
-    fk_servidor INT NOT NULL,
-    CONSTRAINT fk_container_servidor
-        FOREIGN KEY (fk_servidor) REFERENCES servidores(id_servidor)
-);
-
 CREATE TABLE componentes (
     id_componente INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(100) NOT NULL,
@@ -167,11 +158,6 @@ VALUES ('Produção', 'Perfil dos servidores do ambiente de produção', '321', 
 INSERT INTO servidores (nome, endereco_mac, status, fk_perfil_servidor) VALUES
 ('Servidor Produção 01', 'AA:BB:CC:DD:EE:01', 'ATIVO', 1),
 ('Servidor Produção 02', 'AA:BB:CC:DD:EE:02', 'ATIVO', 1);
-
-INSERT INTO container (nome, status, fk_servidor) VALUES
-('coretrace-api', 'ATIVO', 1),
-('coretrace-banco', 'ATIVO', 1),
-('coretrace-web', 'ATIVO', 2);
 
 -- Cada componente é cadastrado uma vez, já com as regras de apresentação.
 -- As primeiras 24 linhas mantêm os IDs usados nos dados de teste abaixo.
