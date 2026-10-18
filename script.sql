@@ -72,7 +72,6 @@ CREATE TABLE perfil_servidor (
 CREATE TABLE usuario_perfil_servidor (
     fk_usuario INT NOT NULL,
     fk_perfil_servidor INT NOT NULL,
-    papel VARCHAR(20) NOT NULL DEFAULT 'visualizador',
     FOREIGN KEY (fk_usuario) REFERENCES usuario(id_usuario),
     FOREIGN KEY (fk_perfil_servidor) REFERENCES perfil_servidor(id_perfil_servidor)
 );
