@@ -1,5 +1,3 @@
--- Esse script apaga e recria o banco coretrace.
--- Credenciais de exemplo apenas para desenvolvimento local
 -- Empresa: token_instalacao = 123
 -- Perfis: Carrinho (321), Financeiro (322), Catálogo (323)
 DROP DATABASE IF EXISTS coretrace;
