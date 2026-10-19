@@ -1,5 +1,6 @@
--- Empresa: token_instalacao = 123
--- Perfis: Carrinho (321), Financeiro (322), Catálogo (323)
+-- CoreTrace (empresa 1): somente equipe de desenvolvimento, sem servidores ou metricas vinculadas
+-- iFood (empresa 2): token_instalacao = 123
+-- Perfis iFood: Carrinho (321), Financeiro (322), Catálogo (323)
 DROP DATABASE IF EXISTS coretrace;
 
 CREATE DATABASE coretrace;
@@ -113,15 +114,20 @@ CREATE TABLE componentes_perfil (
     FOREIGN KEY (fk_perfil_servidor) REFERENCES perfil_servidor(id_perfil_servidor)
 );
 
--- DADOS PARA TESTES
-INSERT INTO empresa (razao_social, cnpj, dt_registro, token_instalacao)
-VALUES ('CoreTrace Empresa Teste', '12345678000199', CURDATE(), '123');
+-- EMPRESAS PARA DEMONSTRACAO
+-- CoreTrace: administracao interna, sem perfis de servidor vinculados.
+-- iFood: cliente monitorado, com os perfis, servidores e limites abaixo.
+-- CNPJs e enderecos sao ficticios para testes.
+INSERT INTO empresa (razao_social, cnpj, dt_registro, token_instalacao) VALUES
+('CoreTrace', '00000000000191', CURDATE(), NULL),
+('iFood', '00000000000272', CURDATE(), '123');
 
-INSERT INTO endereco (numero, cidade, estado, logradouro, fk_empresa)
-VALUES ('100', 'São Paulo', 'SP', 'Avenida Paulista', 1);
+INSERT INTO endereco (numero, cidade, estado, logradouro, fk_empresa) VALUES
+('100', 'São Paulo', 'SP', 'Rua CoreTrace (ficticia)', 1),
+('200', 'Osasco', 'SP', 'Avenida iFood (ficticia)', 2);
 
 INSERT INTO nivel_acesso (nome, descricao) VALUES
-('Administrador CoreTrace', 'Acesso completo a plataforma'),
+('Administrador CoreTrace', 'Acesso completo a plataforma, exclusivo para desenvolvedores CoreTrace'),
 ('Administrador', 'Acesso ao monitoramento e gestao'),
 ('Operador', 'Acesso ao monitoramento e perfis de servidor'),
 ('Visualizador', 'Acesso somente ao monitoramento');
@@ -163,9 +169,9 @@ INSERT INTO nivel_acesso_permissoes
 -- serao simulados no front-end. Aqui ficam somente cadastros e limites.
 INSERT INTO perfil_servidor
 (nome, descricao, token_perfil_servidor, sistema_operacional, monitorar_docker, fk_empresa) VALUES
-('Carrinho', 'APIs e servicos responsaveis pelo carrinho e finalizacao de pedidos', '321', 'linux', TRUE, 1),
-('Financeiro', 'APIs de pagamento e banco de dados de transacoes', '322', 'linux', TRUE, 1),
-('Catálogo', 'Servicos de consulta e catalogacao de produtos', '323', 'linux', FALSE, 1);
+('Carrinho', 'APIs e servicos responsaveis pelo carrinho e finalizacao de pedidos', '321', 'linux', TRUE, 2),
+('Financeiro', 'APIs de pagamento e banco de dados de transacoes', '322', 'linux', TRUE, 2),
+('Catálogo', 'Servicos de consulta e catalogacao de produtos', '323', 'linux', FALSE, 2);
 
 -- O status ATIVO e cadastral. A severidade (normal/atencao/critico)
 -- deve ser CALCULADA pelas metricas mockadas e limites do perfil.
@@ -345,12 +351,21 @@ VALUES
 (43, 3, NULL, NULL),
 (44, 3, NULL, NULL);
 
+-- USUARIOS DE DEMONSTRACAO: senhas e dados pessoais ficticios (apenas ambiente de teste)
+-- O nivel Administrador CoreTrace (1) e reservado a desenvolvedores CoreTrace.
+-- Os tres usuarios iFood usam os niveis Administrador (2), Operador (3) e Visualizador (4).
 INSERT INTO usuario
-(nome, email, senha, cpf, token_acesso, telefone, fk_empresa, fk_nivel_acesso, status)
-VALUES ('Administrador CoreTrace', 'admin@coretrace.com', '123456', '12345678900', NULL, '11999999999', 1, 1, 'ATIVO');
+(nome, email, senha, cpf, token_acesso, telefone, fk_empresa, fk_nivel_acesso, status) VALUES
+('Desenvolvedor CoreTrace', 'dev@coretrace.com', '123456', '12345678900', NULL, '11999999999', 1, 1, 'ATIVO'),
+('Administrador iFood', 'admin@ifood.teste', '123456', '12345678901', NULL, '11988888881', 2, 2, 'ATIVO'),
+('Operador iFood', 'operador@ifood.teste', '123456', '12345678902', NULL, '11988888882', 2, 3, 'ATIVO'),
+('Visualizador iFood', 'visualizador@ifood.teste', '123456', '12345678903', NULL, '11988888883', 2, 4, 'ATIVO');
 
-INSERT INTO usuario_perfil_servidor (fk_usuario, fk_perfil_servidor)
-VALUES (1, 1), (1, 2), (1, 3);
+-- Somente usuarios do iFood associados aos seus perfis de servidor.
+INSERT INTO usuario_perfil_servidor (fk_usuario, fk_perfil_servidor) VALUES
+(2, 1), (2, 2), (2, 3),
+(3, 1), (3, 2), (3, 3),
+(4, 1), (4, 2), (4, 3);
 
 -- CONSULTAS DE TESTE
 SELECT * FROM usuario;
