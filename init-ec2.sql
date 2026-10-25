@@ -1,106 +1,125 @@
--- CORETRACE - INSTALACAO INICIAL DA EC2
--- Executar somente em banco vazio, pelo configuracao.sh de scripts-aws.
--- Baseado em script.sql; manter tabelas e dados iniciais sincronizados.
--- Nao reaplicar: atualizacoes futuras devem usar migracoes separadas.
--- Credenciais de exemplo apenas para desenvolvimento local
--- Empresa: token_instalacao = 123
--- Perfil Produção: token_perfil_servidor = 321
+-- ============================================================================
+-- CORETRACE - SCRIPT COMPLETO COM INSERTS DIRETOS (MySQL 8.0+)
+-- Permissoes por nivel:
+-- 1. Administrador CoreTrace: todas as permissoes (uso interno)
+-- 2. Administrador: gestao de equipe e completa dos perfis de servidor
+-- 3. Analista: consulta + somente editar limites de atencao e critico
+-- 4. Visualizador: somente consultar dashboard, alertas e perfis
+--
+-- ATENCAO: DROP DATABASE APAGA TODOS OS DADOS ANTERIORES!
+-- Script unico: cria todas as tabelas e popula os dados finais diretamente, sem migracao.
+-- A autorizacao deve ser aplicada no BACKEND e limitada a empresa do usuario.
+-- ============================================================================
 
-CREATE DATABASE IF NOT EXISTS coretrace;
+-- CoreTrace (empresa 1): somente equipe de desenvolvimento, sem servidores ou metricas vinculadas
+-- iFood (empresa 2): token_instalacao = 123
+-- Perfis iFood: Carrinho (321), Financeiro (322), Catálogo (323)
+DROP DATABASE IF EXISTS coretrace;
+
+CREATE DATABASE coretrace CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 USE coretrace;
 
 CREATE TABLE empresa (
-    id_empresa INT AUTO_INCREMENT PRIMARY KEY,
+    id_empresa INT AUTO_INCREMENT,
     razao_social VARCHAR(45) NOT NULL,
-    cnpj VARCHAR(45) NOT NULL UNIQUE,
+    cnpj VARCHAR(45) NOT NULL,
     dt_registro DATE,
-    token_instalacao VARCHAR(255) UNIQUE
+    token_instalacao VARCHAR(255),
+    CONSTRAINT pk_empresa PRIMARY KEY (id_empresa),
+    CONSTRAINT uq_empresa_cnpj UNIQUE (cnpj),
+    CONSTRAINT uq_empresa_token_instalacao UNIQUE (token_instalacao)
 );
 
 CREATE TABLE endereco (
-    id_endereco INT AUTO_INCREMENT PRIMARY KEY,
+    id_endereco INT AUTO_INCREMENT,
     numero VARCHAR(10),
     cidade VARCHAR(45),
     estado VARCHAR(45),
     logradouro VARCHAR(100),
     fk_empresa INT NOT NULL,
-    CONSTRAINT fk_endereco_empresa
-        FOREIGN KEY (fk_empresa) REFERENCES empresa(id_empresa)
+    CONSTRAINT fk_endereco_fk_empresa FOREIGN KEY (fk_empresa) REFERENCES empresa(id_empresa),
+    CONSTRAINT pk_endereco PRIMARY KEY (id_endereco)
 );
 
 CREATE TABLE nivel_acesso (
-    id_nivel_acesso INT AUTO_INCREMENT PRIMARY KEY,
+    id_nivel_acesso INT AUTO_INCREMENT,
     nome VARCHAR(45) NOT NULL,
-    descricao VARCHAR(255)
+    descricao VARCHAR(255),
+    CONSTRAINT pk_nivel_acesso PRIMARY KEY (id_nivel_acesso),
+    CONSTRAINT uq_nivel_acesso_nome UNIQUE (nome)
 );
 
 CREATE TABLE permissoes (
-    id_permissao INT AUTO_INCREMENT PRIMARY KEY,
+    id_permissao INT AUTO_INCREMENT,
     nome VARCHAR(45) NOT NULL,
-    descricao VARCHAR(45)
+    descricao VARCHAR(255),
+    CONSTRAINT pk_permissoes PRIMARY KEY (id_permissao),
+    CONSTRAINT uq_permissoes_nome UNIQUE (nome)
 );
 
 CREATE TABLE nivel_acesso_permissoes (
     fk_nivel_acesso INT NOT NULL,
     fk_permissao INT NOT NULL,
-    CONSTRAINT fk_nap_nivel_acesso
-        FOREIGN KEY (fk_nivel_acesso) REFERENCES nivel_acesso(id_nivel_acesso),
-    CONSTRAINT fk_nap_permissao
-        FOREIGN KEY (fk_permissao) REFERENCES permissoes(id_permissao)
+    CONSTRAINT pk_nivel_acesso_permissoes PRIMARY KEY (fk_nivel_acesso, fk_permissao),
+    CONSTRAINT fk_nivel_acesso_permissoes_fk_nivel_acesso FOREIGN KEY (fk_nivel_acesso) REFERENCES nivel_acesso(id_nivel_acesso),
+    CONSTRAINT fk_nivel_acesso_permissoes_fk_permissao FOREIGN KEY (fk_permissao) REFERENCES permissoes(id_permissao)
 );
 
 CREATE TABLE usuario (
-    id_usuario INT AUTO_INCREMENT PRIMARY KEY,
+    id_usuario INT AUTO_INCREMENT,
     nome VARCHAR(45) NOT NULL,
-    email VARCHAR(45) NOT NULL UNIQUE,
-    senha VARCHAR(45),
-    cpf CHAR(11) UNIQUE,
+    email VARCHAR(45) NOT NULL,
+    senha VARCHAR(255),
+    cpf CHAR(11),
     token_acesso VARCHAR(255),
     telefone VARCHAR(45),
     fk_empresa INT NOT NULL,
     fk_nivel_acesso INT NOT NULL,
     status VARCHAR(45),
-    CONSTRAINT fk_usuario_empresa
-        FOREIGN KEY (fk_empresa) REFERENCES empresa(id_empresa),
-    CONSTRAINT fk_usuario_nivel_acesso
-        FOREIGN KEY (fk_nivel_acesso) REFERENCES nivel_acesso(id_nivel_acesso)
+    CONSTRAINT fk_usuario_fk_empresa FOREIGN KEY (fk_empresa) REFERENCES empresa(id_empresa),
+    CONSTRAINT fk_usuario_fk_nivel_acesso FOREIGN KEY (fk_nivel_acesso) REFERENCES nivel_acesso(id_nivel_acesso),
+    CONSTRAINT pk_usuario PRIMARY KEY (id_usuario),
+    CONSTRAINT uq_usuario_email UNIQUE (email),
+    CONSTRAINT uq_usuario_cpf UNIQUE (cpf)
 );
 
 CREATE TABLE perfil_servidor (
-    id_perfil_servidor INT AUTO_INCREMENT PRIMARY KEY,
+    id_perfil_servidor INT AUTO_INCREMENT,
     nome VARCHAR(100) NOT NULL,
     descricao VARCHAR(500),
-    token_perfil_servidor VARCHAR(255) UNIQUE NOT NULL,
+    token_perfil_servidor VARCHAR(255) NOT NULL,
     sistema_operacional VARCHAR(10) NOT NULL DEFAULT 'linux',
     monitorar_docker BOOLEAN NOT NULL DEFAULT FALSE,
     fk_empresa INT NOT NULL,
-    CONSTRAINT fk_perfil_servidor_empresa
-        FOREIGN KEY (fk_empresa) REFERENCES empresa(id_empresa)
+    CONSTRAINT fk_perfil_servidor_fk_empresa FOREIGN KEY (fk_empresa) REFERENCES empresa(id_empresa),
+    CONSTRAINT pk_perfil_servidor PRIMARY KEY (id_perfil_servidor),
+    CONSTRAINT uq_perfil_servidor_token_perfil_servidor UNIQUE (token_perfil_servidor)
 );
 
 CREATE TABLE usuario_perfil_servidor (
     fk_usuario INT NOT NULL,
     fk_perfil_servidor INT NOT NULL,
-    CONSTRAINT fk_ups_usuario
-        FOREIGN KEY (fk_usuario) REFERENCES usuario(id_usuario),
-    CONSTRAINT fk_ups_perfil_servidor
-        FOREIGN KEY (fk_perfil_servidor) REFERENCES perfil_servidor(id_perfil_servidor)
+    CONSTRAINT pk_usuario_perfil_servidor PRIMARY KEY (fk_usuario, fk_perfil_servidor),
+    CONSTRAINT fk_usuario_perfil_servidor_fk_usuario FOREIGN KEY (fk_usuario) REFERENCES usuario(id_usuario),
+    CONSTRAINT fk_usuario_perfil_servidor_fk_perfil_servidor FOREIGN KEY (fk_perfil_servidor) REFERENCES perfil_servidor(id_perfil_servidor)
 );
 
 CREATE TABLE servidores (
-    id_servidor INT AUTO_INCREMENT PRIMARY KEY,
+    id_servidor INT AUTO_INCREMENT,
     nome VARCHAR(45) NOT NULL,
     status VARCHAR(45),
-    endereco_mac VARCHAR(17) UNIQUE NOT NULL,
+    endereco_mac VARCHAR(17) NOT NULL,
     fk_perfil_servidor INT NOT NULL,
-    CONSTRAINT fk_servidores_perfil_servidor
-        FOREIGN KEY (fk_perfil_servidor) REFERENCES perfil_servidor(id_perfil_servidor)
+    CONSTRAINT fk_servidores_fk_perfil_servidor FOREIGN KEY (fk_perfil_servidor) REFERENCES perfil_servidor(id_perfil_servidor),
+    CONSTRAINT pk_servidores PRIMARY KEY (id_servidor),
+    CONSTRAINT uq_servidores_endereco_mac UNIQUE (endereco_mac)
 );
 
 CREATE TABLE componentes (
-    id_componente INT AUTO_INCREMENT PRIMARY KEY,
+    id_componente INT AUTO_INCREMENT,
     nome VARCHAR(100) NOT NULL,
-    nome_coluna VARCHAR(100) NOT NULL UNIQUE,
+    nome_coluna VARCHAR(100) NOT NULL,
     funcao_psutil VARCHAR(100) NOT NULL,
     argumento_nome VARCHAR(100),
     argumento_valor VARCHAR(100),
@@ -112,54 +131,101 @@ CREATE TABLE componentes (
     recomendada BOOLEAN,
     plataforma VARCHAR(10),
     exibir_no_card BOOLEAN NOT NULL DEFAULT TRUE,
-    ordem_card INT NOT NULL DEFAULT 0
+    ordem_card INT NOT NULL DEFAULT 0,
+    CONSTRAINT pk_componentes PRIMARY KEY (id_componente),
+    CONSTRAINT uq_componentes_nome_coluna UNIQUE (nome_coluna)
 );
 
 CREATE TABLE componentes_perfil (
     fk_componente INT NOT NULL,
     fk_perfil_servidor INT NOT NULL,
+
+    operador VARCHAR(2) NOT NULL DEFAULT '>',
     limite_atencao DOUBLE,
     limite_critico DOUBLE,
-    operador VARCHAR(2) NOT NULL DEFAULT '>',
-    CONSTRAINT fk_cp_componente
-        FOREIGN KEY (fk_componente) REFERENCES componentes(id_componente),
-    CONSTRAINT fk_cp_perfil_servidor
-        FOREIGN KEY (fk_perfil_servidor) REFERENCES perfil_servidor(id_perfil_servidor)
+
+    operador_2 VARCHAR(2),
+    limite_atencao_2 DOUBLE,
+    limite_critico_2 DOUBLE,
+
+    CONSTRAINT pk_componentes_perfil PRIMARY KEY (fk_componente, fk_perfil_servidor),
+    CONSTRAINT fk_componentes_perfil_fk_componente FOREIGN KEY (fk_componente) REFERENCES componentes(id_componente),
+    CONSTRAINT fk_componentes_perfil_fk_perfil_servidor FOREIGN KEY (fk_perfil_servidor) REFERENCES perfil_servidor(id_perfil_servidor)
 );
 
--- DADOS PARA TESTES
-INSERT INTO empresa (razao_social, cnpj, dt_registro, token_instalacao)
-VALUES ('CoreTrace Empresa Teste', '12345678000199', CURDATE(), '123');
+-- EMPRESAS PARA DEMONSTRACAO
+-- CoreTrace: administracao interna, sem perfis de servidor vinculados.
+-- iFood: cliente monitorado, com os perfis, servidores e limites abaixo.
+-- CNPJs e enderecos sao ficticios para testes.
+INSERT INTO empresa (razao_social, cnpj, dt_registro, token_instalacao) VALUES
+('CoreTrace', '00000000000191', CURDATE(), NULL),
+('iFood', '00000000000272', CURDATE(), '123');
 
-INSERT INTO endereco (numero, cidade, estado, logradouro, fk_empresa)
-VALUES ('100', 'São Paulo', 'SP', 'Avenida Paulista', 1);
+INSERT INTO endereco (numero, cidade, estado, logradouro, fk_empresa) VALUES
+('100', 'São Paulo', 'SP', 'Rua CoreTrace (ficticia)', 1),
+('200', 'Osasco', 'SP', 'Avenida iFood (ficticia)', 2);
 
+-- NIVEIS DE ACESSO - MANTER IDs PARA COMPATIBILIDADE COM O FRONT/BACK
 INSERT INTO nivel_acesso (nome, descricao) VALUES
-('Administrador', 'Acesso completo ao sistema'),
-('Operador', 'Acesso ao monitoramento dos servidores'),
-('Visualizador', 'Acesso somente para visualização');
+('Administrador CoreTrace', 'Acesso interno completo da equipe de desenvolvimento CoreTrace'),
+('Administrador', 'Gerencia equipe, perfis, metricas monitoradas e limites'),
+('Analista', 'Consulta e edita somente os limites de alerta'),
+('Visualizador', 'Consulta dashboards, alertas e perfis de servidor sem alterar dados');
 
+-- Acesso a tela != permissao de alterar os dados da tela.
+-- Analista pode atualizar limites, mas NAO pode selecionar/adicionar/remover metricas.
+-- Alteracoes de papeis devem ser validadas nas rotas do backend.
+-- EDITAR_METRICAS_PERFIL: adiciona/remove componentes_perfil; nao altera limites de outras metricas.
+-- EDITAR_LIMITES_METRICAS: atualiza limite_atencao, limite_critico, operador;
+-- nao permite adicionar/remover componentes nem editar dados cadastrais do perfil.
 INSERT INTO permissoes (nome, descricao) VALUES
-('GERENCIAR_USUARIOS', 'Gerenciar usuários'),
-('GERENCIAR_PERFIS', 'Gerenciar perfis'),
-('GERENCIAR_SERVIDORES', 'Gerenciar servidores'),
-('VISUALIZAR_MONITORAMENTO', 'Visualizar monitoramento'),
-('VISUALIZAR_ALERTAS', 'Visualizar alertas');
+('VISUALIZAR_DASHBOARD', 'Acessar dashboard'),             -- 1
+('VISUALIZAR_ALERTAS', 'Acessar alertas'),                 -- 2
+('ACESSAR_PERFIS_SERVIDOR', 'Consultar perfis de servidor'), -- 3
+('ACESSAR_EQUIPE', 'Gerenciar equipe e acessos'),         -- 4
+('ACESSAR_EMPRESAS', 'Gerenciar empresas'),               -- 5 (exclusivo CoreTrace)
+('CRIAR_PERFIL_SERVIDOR', 'Criar perfil de servidor'),    -- 6
+('EDITAR_DADOS_PERFIL', 'Editar dados do perfil de servidor'), -- 7
+('EDITAR_METRICAS_PERFIL', 'Selecionar metricas monitoradas'), -- 8
+('EDITAR_LIMITES_METRICAS', 'Editar limites de atencao e critico'), -- 9
+('EXCLUIR_PERFIL_SERVIDOR', 'Excluir perfil de servidor'); -- 10
 
+-- MATRIZ DE PERMISSOES
+-- CoreTrace interno: 1 a 10 (tudo)
+-- Administrador cliente: 1,2,3,4,6,7,8,9,10
+-- Analista cliente: 1,2,3,9 (nao edita metricas monitoradas)
+-- Visualizador cliente: 1,2,3
 INSERT INTO nivel_acesso_permissoes (fk_nivel_acesso, fk_permissao) VALUES
 (1, 1), (1, 2), (1, 3), (1, 4), (1, 5),
-(2, 3), (2, 4), (2, 5),
-(3, 4), (3, 5);
+(1, 6), (1, 7), (1, 8), (1, 9), (1, 10),
+(2, 1), (2, 2), (2, 3), (2, 4),
+(2, 6), (2, 7), (2, 8), (2, 9), (2, 10),
+(3, 1), (3, 2), (3, 3), (3, 9),
+(4, 1), (4, 2), (4, 3);
 
-INSERT INTO perfil_servidor (nome, descricao, token_perfil_servidor, fk_empresa)
-VALUES ('Produção', 'Perfil dos servidores do ambiente de produção', '321', 1);
+-- PERFIS FUNCIONAIS PARA DEMONSTRACAO
+-- Os dados de monitoramento (CPU, RAM, Disco, Rede, processos e containers)
+-- serao simulados no front-end. Aqui ficam somente cadastros e limites.
+INSERT INTO perfil_servidor
+(nome, descricao, token_perfil_servidor, sistema_operacional, monitorar_docker, fk_empresa) VALUES
+('Carrinho', 'APIs e servicos responsaveis pelo carrinho e finalizacao de pedidos', '321', 'linux', TRUE, 2),
+('Financeiro', 'APIs de pagamento e banco de dados de transacoes', '322', 'linux', TRUE, 2),
+('Catálogo', 'Servicos de consulta e catalogacao de produtos', '323', 'linux', FALSE, 2);
 
+-- O status ATIVO e cadastral. A severidade (normal/atencao/critico)
+-- deve ser CALCULADA pelas metricas mockadas e limites do perfil.
 INSERT INTO servidores (nome, endereco_mac, status, fk_perfil_servidor) VALUES
-('Servidor Produção 01', 'AA:BB:CC:DD:EE:01', 'ATIVO', 1),
-('Servidor Produção 02', 'AA:BB:CC:DD:EE:02', 'ATIVO', 1);
+('cart-api-07', 'AA:BB:CC:DD:EE:07', 'ATIVO', 1),
+('cart-api-12', 'AA:BB:CC:DD:EE:12', 'ATIVO', 1),
+('cart-api-02', 'AA:BB:CC:DD:EE:02', 'ATIVO', 1),
+('cart-api-09', 'AA:BB:CC:DD:EE:09', 'ATIVO', 1),
+('pay-db-02', 'AA:BB:CC:DD:EF:02', 'ATIVO', 2),
+('pay-api-04', 'AA:BB:CC:DD:EF:04', 'ATIVO', 2),
+('pay-api-06', 'AA:BB:CC:DD:EF:06', 'ATIVO', 2),
+('catalog-api-03', 'AA:BB:CC:DD:F0:03', 'ATIVO', 3),
+('catalog-api-05', 'AA:BB:CC:DD:F0:05', 'ATIVO', 3),
+('catalog-api-08', 'AA:BB:CC:DD:F0:08', 'ATIVO', 3);
 
--- Cada componente é cadastrado uma vez, já com as regras de apresentação.
--- As primeiras 24 linhas mantêm os IDs usados nos dados de teste abaixo.
 INSERT INTO componentes
 (nome, nome_coluna, funcao_psutil, argumento_nome, argumento_valor,
  atributo_retorno, indice_retorno, unidade,
@@ -194,9 +260,7 @@ VALUES
 ('Interrupções (eventos/s)', 'cpu_interrupts_per_second', 'cpu_stats', NULL, NULL, 'interrupts', NULL, 'eventos/s', 'cpu', 0, 0, NULL, TRUE, 7),
 ('Trocas de contexto (eventos/s)', 'cpu_context_switches_per_second', 'cpu_stats', NULL, NULL, 'ctx_switches', NULL, 'eventos/s', 'cpu', 0, 0, NULL, TRUE, 8),
 ('Memória em cache (GB) · Linux', 'ram_cached', 'virtual_memory', NULL, NULL, 'cached', NULL, 'GB', 'ram', FALSE, FALSE, 'linux', TRUE, 7),
--- Essa não é do psutil
 ('Encerramentos por OOM · Linux', 'ram_oom_kills', 'linux_oom_kill', NULL, NULL, NULL, NULL, 'ocorrências', 'ram', TRUE, TRUE, 'linux', TRUE, 4),
--- DISCO
 ('Uso de inodes (%) · Linux', 'disk_inodes_percent', 'statvfs', NULL, NULL, NULL, NULL, '%', 'disco', TRUE, TRUE, 'linux', TRUE, 3),
 ('Tempo médio estimado de leitura/escrita (ms)', 'disk_io_time', 'disk_io_counters', 'perdisk', 'True', NULL, NULL, 'ms', 'disco', TRUE, TRUE, NULL, TRUE, 4),
 ('Fila média de I/O · Linux', 'disk_queue', 'linux_diskstats', NULL, NULL, NULL, NULL, 'operações', 'disco', TRUE, TRUE, 'linux', TRUE, 5),
@@ -214,6 +278,9 @@ VALUES
 ('Pacotes recebidos (pacotes/s)', 'net_packets_recv', 'net_io_counters', 'pernic', 'True', 'packets_recv', NULL, 'pacotes/s', 'rede', FALSE, FALSE, NULL, TRUE, 5),
 ('Pacotes enviados (pacotes/s)', 'net_packets_sent', 'net_io_counters', 'pernic', 'True', 'packets_sent', NULL, 'pacotes/s', 'rede', FALSE, FALSE, NULL, TRUE, 6);
 
+-- Limites por perfil: usados pela classificacao de severidade no front.
+-- net_errors e net_drops representam taxas em eventos/pacotes por segundo
+-- (sem converter para porcentagem).
 INSERT INTO componentes_perfil
 (fk_componente, fk_perfil_servidor, limite_atencao, limite_critico)
 VALUES
@@ -247,21 +314,129 @@ VALUES
 (32, 1, NULL, NULL),
 (33, 1, NULL, NULL),
 (39, 1, NULL, NULL),
-(40, 1, NULL, NULL),
-(41, 1, NULL, NULL),
+(40, 1, 5.00, 15.00),
+(41, 1, 10.00, 30.00),
 (42, 1, NULL, NULL),
 (43, 1, NULL, NULL),
-(44, 1, NULL, NULL);
+(44, 1, NULL, NULL),
+(1, 2, 75.00, 92.00),
+(2, 2, NULL, NULL),
+(3, 2, NULL, NULL),
+(4, 2, NULL, NULL),
+(5, 2, NULL, NULL),
+(6, 2, NULL, NULL),
+(7, 2, NULL, NULL),
+(8, 2, NULL, NULL),
+(9, 2, NULL, NULL),
+(10, 2, NULL, NULL),
+(11, 2, NULL, NULL),
+(12, 2, NULL, NULL),
+(13, 2, NULL, NULL),
+(14, 2, 75.00, 90.00),
+(15, 2, NULL, NULL),
+(16, 2, NULL, NULL),
+(17, 2, NULL, NULL),
+(18, 2, 80.00, 95.00),
+(19, 2, NULL, NULL),
+(20, 2, NULL, NULL),
+(21, 2, NULL, NULL),
+(22, 2, 50.00, 80.00),
+(23, 2, NULL, NULL),
+(24, 2, NULL, NULL),
+(25, 2, NULL, NULL),
+(30, 2, NULL, NULL),
+(31, 2, NULL, NULL),
+(32, 2, NULL, NULL),
+(33, 2, NULL, NULL),
+(39, 2, NULL, NULL),
+(40, 2, 5.00, 15.00),
+(41, 2, 10.00, 30.00),
+(42, 2, NULL, NULL),
+(43, 2, NULL, NULL),
+(44, 2, NULL, NULL),
+(1, 3, 75.00, 90.00),
+(2, 3, NULL, NULL),
+(3, 3, NULL, NULL),
+(4, 3, NULL, NULL),
+(5, 3, NULL, NULL),
+(6, 3, NULL, NULL),
+(7, 3, NULL, NULL),
+(8, 3, NULL, NULL),
+(9, 3, NULL, NULL),
+(10, 3, NULL, NULL),
+(11, 3, NULL, NULL),
+(12, 3, NULL, NULL),
+(13, 3, NULL, NULL),
+(14, 3, 75.00, 90.00),
+(15, 3, NULL, NULL),
+(16, 3, NULL, NULL),
+(17, 3, NULL, NULL),
+(18, 3, 80.00, 95.00),
+(19, 3, NULL, NULL),
+(20, 3, NULL, NULL),
+(21, 3, NULL, NULL),
+(22, 3, 50.00, 80.00),
+(23, 3, NULL, NULL),
+(24, 3, NULL, NULL),
+(25, 3, NULL, NULL),
+(30, 3, NULL, NULL),
+(31, 3, NULL, NULL),
+(32, 3, NULL, NULL),
+(33, 3, NULL, NULL),
+(39, 3, NULL, NULL),
+(40, 3, 5.00, 15.00),
+(41, 3, 10.00, 30.00),
+(42, 3, NULL, NULL),
+(43, 3, NULL, NULL),
+(44, 3, NULL, NULL);
 
+-- USUARIOS DE DEMONSTRACAO: senhas e dados pessoais ficticios (apenas ambiente de teste)
+-- O nivel Administrador CoreTrace (1) e reservado a desenvolvedores CoreTrace.
+-- Os tres usuarios iFood usam os niveis Administrador (2), Analista (3) e Visualizador (4).
+-- ATENCAO: senhas em texto puro SOMENTE para simular o ambiente didatico.
+-- Em producao, armazenar hash de senha (ex.: Argon2id ou bcrypt).
 INSERT INTO usuario
-(nome, email, senha, cpf, token_acesso, telefone, fk_empresa, fk_nivel_acesso, status)
-VALUES ('Administrador CoreTrace', 'admin@coretrace.com', '123456', '12345678900', NULL, '11999999999', 1, 1, 'ATIVO');
+(nome, email, senha, cpf, token_acesso, telefone, fk_empresa, fk_nivel_acesso, status) VALUES
+('Desenvolvedor CoreTrace', 'dev@coretrace.com', '123456', '12345678900', NULL, '11999999999', 1, 1, 'ATIVO'),
+('Eduardo', 'admin@ifood.teste', '123456', '12345678901', NULL, '11988888881', 2, 2, 'ATIVO'),
+('Amanda', 'analista@ifood.teste', '123456', '12345678902', NULL, '11988888882', 2, 3, 'ATIVO'),
+('Marcelo', 'visualizador@ifood.teste', '123456', '12345678903', NULL, '11988888883', 2, 4, 'ATIVO');
 
-INSERT INTO usuario_perfil_servidor (fk_usuario, fk_perfil_servidor)
-VALUES (1, 1);
+-- Somente usuarios do iFood associados aos seus perfis de servidor.
+INSERT INTO usuario_perfil_servidor (fk_usuario, fk_perfil_servidor) VALUES
+(2, 1), (2, 2), (2, 3),
+(3, 1), (3, 2), (3, 3),
+(4, 1), (4, 2), (4, 3);
 
-CREATE TABLE coretrace_schema_version (
-    versao VARCHAR(50) PRIMARY KEY,
-    aplicada_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-INSERT INTO coretrace_schema_version (versao) VALUES ('001_inicial');
+-- CONSULTAS DE TESTE
+SELECT * FROM usuario;
+
+SELECT DISTINCT
+    comp.nome, comp.nome_coluna, comp.funcao_psutil,
+    comp.argumento_nome, comp.argumento_valor,
+    comp.atributo_retorno, comp.indice_retorno, comp.unidade,
+    cp.limite_atencao, cp.limite_critico, cp.operador
+FROM servidores s
+JOIN perfil_servidor ps ON ps.id_perfil_servidor = s.fk_perfil_servidor
+JOIN componentes_perfil cp ON cp.fk_perfil_servidor = ps.id_perfil_servidor
+JOIN componentes comp ON comp.id_componente = cp.fk_componente
+WHERE s.endereco_mac = 'AA:BB:CC:DD:EE:07';
+
+SELECT * FROM perfil_servidor;
+
+SELECT * FROM componentes_perfil WHERE fk_perfil_servidor = 1;
+
+SELECT * FROM componentes_perfil;
+
+-- VERIFICACAO DA MATRIZ DE ACESSO (cada linha e uma permissao efetiva)
+SELECT na.id_nivel_acesso, na.nome AS nivel, p.nome AS permissao
+FROM nivel_acesso na
+JOIN nivel_acesso_permissoes nap ON nap.fk_nivel_acesso = na.id_nivel_acesso
+JOIN permissoes p ON p.id_permissao = nap.fk_permissao
+ORDER BY na.id_nivel_acesso, p.id_permissao;
+
+-- VERIFICACAO DE SEGURANCA: esperado = 0 linhas (Analista sem editar metricas)
+SELECT p.nome AS permissao_indevida_analista
+FROM nivel_acesso_permissoes nap
+JOIN permissoes p ON p.id_permissao = nap.fk_permissao
+WHERE nap.fk_nivel_acesso = 3 AND p.nome = 'EDITAR_METRICAS_PERFIL';
