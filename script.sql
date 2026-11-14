@@ -91,6 +91,7 @@ CREATE TABLE perfil_servidor (
     token_perfil_servidor VARCHAR(255) NOT NULL,
     sistema_operacional VARCHAR(10) NOT NULL DEFAULT 'linux',
     monitorar_docker BOOLEAN NOT NULL DEFAULT FALSE,
+    criticidade_negocio INT NOT NULL DEFAULT 0,
     fk_empresa INT NOT NULL,
     CONSTRAINT fk_perfil_servidor_fk_empresa FOREIGN KEY (fk_empresa) REFERENCES empresa(id_empresa),
     CONSTRAINT pk_perfil_servidor PRIMARY KEY (id_perfil_servidor),
