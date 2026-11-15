@@ -91,6 +91,7 @@ CREATE TABLE perfil_servidor (
     token_perfil_servidor VARCHAR(255) NOT NULL,
     sistema_operacional VARCHAR(10) NOT NULL DEFAULT 'linux',
     monitorar_docker BOOLEAN NOT NULL DEFAULT FALSE,
+    criticidade_negocio INT NOT NULL DEFAULT 0,
     fk_empresa INT NOT NULL,
     CONSTRAINT fk_perfil_servidor_fk_empresa FOREIGN KEY (fk_empresa) REFERENCES empresa(id_empresa),
     CONSTRAINT pk_perfil_servidor PRIMARY KEY (id_perfil_servidor),
@@ -207,10 +208,10 @@ INSERT INTO nivel_acesso_permissoes (fk_nivel_acesso, fk_permissao) VALUES
 -- Os dados de monitoramento (CPU, RAM, Disco, Rede, processos e containers)
 -- serao simulados no front-end. Aqui ficam somente cadastros e limites.
 INSERT INTO perfil_servidor
-(nome, descricao, token_perfil_servidor, sistema_operacional, monitorar_docker, fk_empresa) VALUES
-('Carrinho', 'APIs e servicos responsaveis pelo carrinho e finalizacao de pedidos', '321', 'linux', TRUE, 2),
-('Financeiro', 'APIs de pagamento e banco de dados de transacoes', '322', 'linux', TRUE, 2),
-('Catálogo', 'Servicos de consulta e catalogacao de produtos', '323', 'linux', FALSE, 2);
+(nome, descricao, token_perfil_servidor, sistema_operacional, monitorar_docker, criticidade_negocio, fk_empresa) VALUES
+('Carrinho', 'APIs e servicos responsaveis pelo carrinho e finalizacao de pedidos', '321', 'linux', TRUE, 2, 2),
+('Financeiro', 'APIs de pagamento e banco de dados de transacoes', '322', 'linux', TRUE, 3, 2),
+('Catálogo', 'Servicos de consulta e catalogacao de produtos', '323', 'linux', FALSE, 1, 2);
 
 -- O status ATIVO e cadastral. A severidade (normal/atencao/critico)
 -- deve ser CALCULADA pelas metricas mockadas e limites do perfil.
