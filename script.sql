@@ -216,16 +216,16 @@ INSERT INTO perfil_servidor
 -- O status ATIVO e cadastral. A severidade (normal/atencao/critico)
 -- deve ser CALCULADA pelas metricas mockadas e limites do perfil.
 INSERT INTO servidores (nome, endereco_mac, status, fk_perfil_servidor) VALUES
-('cart-api-07', 'AA:BB:CC:DD:EE:07', 'ATIVO', 1),
-('cart-api-12', 'AA:BB:CC:DD:EE:12', 'ATIVO', 1),
-('cart-api-02', 'AA:BB:CC:DD:EE:02', 'ATIVO', 1),
-('cart-api-09', 'AA:BB:CC:DD:EE:09', 'ATIVO', 1),
-('pay-db-02', 'AA:BB:CC:DD:EF:02', 'ATIVO', 2),
-('pay-api-04', 'AA:BB:CC:DD:EF:04', 'ATIVO', 2),
-('pay-api-06', 'AA:BB:CC:DD:EF:06', 'ATIVO', 2),
-('catalog-api-03', 'AA:BB:CC:DD:F0:03', 'ATIVO', 3),
-('catalog-api-05', 'AA:BB:CC:DD:F0:05', 'ATIVO', 3),
-('catalog-api-08', 'AA:BB:CC:DD:F0:08', 'ATIVO', 3);
+('Carrinho-1', 'AA:BB:CC:DD:EE:07', 'ATIVO', 1),
+('Carrinho-2', 'AA:BB:CC:DD:EE:12', 'ATIVO', 1),
+('Carrinho-3', 'AA:BB:CC:DD:EE:02', 'ATIVO', 1),
+('Carrinho-4', 'AA:BB:CC:DD:EE:09', 'ATIVO', 1),
+('Financeiro-1', 'AA:BB:CC:DD:EF:02', 'ATIVO', 2),
+('Financeiro-2', 'AA:BB:CC:DD:EF:04', 'ATIVO', 2),
+('Financeiro-3', 'AA:BB:CC:DD:EF:06', 'ATIVO', 2),
+('Catálogo-1', 'AA:BB:CC:DD:F0:03', 'ATIVO', 3),
+('Catálogo-2', 'AA:BB:CC:DD:F0:05', 'ATIVO', 3),
+('Catálogo-3', 'AA:BB:CC:DD:F0:08', 'ATIVO', 3);
 
 INSERT INTO componentes
 (nome, nome_coluna, funcao_psutil, argumento_nome, argumento_valor,
