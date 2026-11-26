@@ -280,6 +280,9 @@ VALUES
 ('Pacotes enviados (pacotes/s)', 'net_packets_sent', 'net_io_counters', 'pernic', 'True', 'packets_sent', NULL, 'pacotes/s', 'rede', FALSE, FALSE, NULL, TRUE, 6);
 
 -- Limites por perfil: usados pela classificacao de severidade no front.
+-- componente 25 (cpu_percent_percpu, uso por nucleo logico) usa o mesmo limite
+-- da cpu_percent agregada do perfil: um nucleo travado sozinho tambem conta
+-- como atencao/critico, mesmo com a media geral do servidor normal.
 -- net_errors e net_drops representam taxas em eventos/pacotes por segundo
 -- (sem converter para porcentagem).
 INSERT INTO componentes_perfil
@@ -309,7 +312,7 @@ VALUES
 (22, 1, 50.00, 80.00),
 (23, 1, NULL, NULL),
 (24, 1, NULL, NULL),
-(25, 1, NULL, NULL),
+(25, 1, 70.00, 90.00),
 (30, 1, NULL, NULL),
 (31, 1, NULL, NULL),
 (32, 1, NULL, NULL),
@@ -344,7 +347,7 @@ VALUES
 (22, 2, 50.00, 80.00),
 (23, 2, NULL, NULL),
 (24, 2, NULL, NULL),
-(25, 2, NULL, NULL),
+(25, 2, 75.00, 92.00),
 (30, 2, NULL, NULL),
 (31, 2, NULL, NULL),
 (32, 2, NULL, NULL),
@@ -379,7 +382,7 @@ VALUES
 (22, 3, 50.00, 80.00),
 (23, 3, NULL, NULL),
 (24, 3, NULL, NULL),
-(25, 3, NULL, NULL),
+(25, 3, 75.00, 90.00),
 (30, 3, NULL, NULL),
 (31, 3, NULL, NULL),
 (32, 3, NULL, NULL),
